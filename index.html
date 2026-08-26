@@ -358,6 +358,58 @@
 
   .toast.show { transform: translateX(-50%) translateY(0); }
 
+  .admin-bar {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+  }
+
+  .link-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--focus);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .admin-only-note {
+    background: var(--ground);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.78rem !important;
+    margin: -0.3rem 0 1rem !important;
+  }
+
+  .dialog-body input[type="email"],
+  .dialog-body input[type="password"] {
+    width: 100%;
+    padding: 0.6rem 0.7rem;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--ground);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.9rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .login-error {
+    color: var(--stub) !important;
+    font-size: 0.8rem !important;
+    margin: -0.2rem 0 0.9rem !important;
+  }
+
   .setup-note {
     max-width: 640px;
     margin: 3rem auto;
@@ -409,6 +461,12 @@
   </div>
 
   <div class="grid" id="grid"></div>
+
+  <div class="admin-bar">
+    <span id="adminStatus">Solo el organizador puede liberar números vendidos.</span>
+    <button class="link-btn" id="adminLoginBtn" type="button">Iniciar sesión como organizador</button>
+    <button class="link-btn" id="adminLogoutBtn" type="button" hidden>Cerrar sesión</button>
+  </div>
 </div>
 
 <dialog id="sellDialog">
@@ -427,9 +485,24 @@
   <div class="dialog-body">
     <h3>Número <span id="releaseNumber"></span> vendido</h3>
     <p id="releaseBuyerLine"></p>
+    <p class="admin-only-note" id="adminOnlyNote">Solo el organizador puede liberar este número.</p>
     <div class="dialog-actions">
       <button class="ghost" id="releaseCancel" type="button">Cerrar</button>
-      <button class="primary release" id="releaseConfirm" type="button">Liberar número</button>
+      <button class="primary release" id="releaseConfirm" type="button" hidden>Liberar número</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="loginDialog">
+  <div class="dialog-body">
+    <h3>Acceso de organizador</h3>
+    <p>Inicia sesión para poder liberar números vendidos por error.</p>
+    <input type="email" id="loginEmail" placeholder="Correo" autocomplete="username">
+    <input type="password" id="loginPassword" placeholder="Contraseña" autocomplete="current-password">
+    <p class="login-error" id="loginError" hidden></p>
+    <div class="dialog-actions">
+      <button class="ghost" id="loginCancel" type="button">Cancelar</button>
+      <button class="primary" id="loginConfirm" type="button">Entrar</button>
     </div>
   </div>
 </dialog>
@@ -441,6 +514,9 @@
   import {
     getDatabase, ref, onValue, runTransaction, set, remove
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  import {
+    getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   // ---------------------------------------------------------------
   // 1) Pega aquí la config de tu proyecto Firebase (ver guía README).
@@ -469,6 +545,8 @@
   } else {
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app);
+    let isAdmin = false;
 
     const titleEl = document.getElementById("title");
     const subtitleEl = document.getElementById("subtitle");
@@ -545,8 +623,19 @@
     const releaseDialog = document.getElementById("releaseDialog");
     const releaseNumber = document.getElementById("releaseNumber");
     const releaseBuyerLine = document.getElementById("releaseBuyerLine");
+    const adminOnlyNote = document.getElementById("adminOnlyNote");
     const releaseCancel = document.getElementById("releaseCancel");
     const releaseConfirm = document.getElementById("releaseConfirm");
+
+    const adminStatus = document.getElementById("adminStatus");
+    const adminLoginBtn = document.getElementById("adminLoginBtn");
+    const adminLogoutBtn = document.getElementById("adminLogoutBtn");
+    const loginDialog = document.getElementById("loginDialog");
+    const loginEmail = document.getElementById("loginEmail");
+    const loginPassword = document.getElementById("loginPassword");
+    const loginError = document.getElementById("loginError");
+    const loginCancel = document.getElementById("loginCancel");
+    const loginConfirm = document.getElementById("loginConfirm");
 
     let activeNumber = null;
 
@@ -556,6 +645,8 @@
       if (entry && entry.sold) {
         releaseNumber.textContent = "#" + n;
         releaseBuyerLine.textContent = entry.buyer ? ("Comprador: " + entry.buyer) : "Sin nombre registrado.";
+        releaseConfirm.hidden = !isAdmin;
+        adminOnlyNote.hidden = isAdmin;
         releaseDialog.showModal();
       } else {
         sellNumber.textContent = "#" + n;
@@ -607,6 +698,35 @@
       priceTimer = setTimeout(function () {
         set(ref(db, "meta/price"), isNaN(v) ? 0 : v);
       }, 700);
+    });
+
+    onAuthStateChanged(auth, function (user) {
+      isAdmin = !!user;
+      adminLoginBtn.hidden = isAdmin;
+      adminLogoutBtn.hidden = !isAdmin;
+      adminStatus.textContent = isAdmin
+        ? "Sesión de organizador activa — puedes liberar números."
+        : "Solo el organizador puede liberar números vendidos.";
+    });
+
+    adminLoginBtn.addEventListener("click", function () {
+      loginEmail.value = "";
+      loginPassword.value = "";
+      loginError.hidden = true;
+      loginDialog.showModal();
+      loginEmail.focus();
+    });
+
+    adminLogoutBtn.addEventListener("click", function () { signOut(auth); });
+    loginCancel.addEventListener("click", function () { loginDialog.close(); });
+
+    loginConfirm.addEventListener("click", function () {
+      signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPassword.value)
+        .then(function () { loginDialog.close(); })
+        .catch(function () {
+          loginError.textContent = "Correo o contraseña incorrectos.";
+          loginError.hidden = false;
+        });
     });
   }
 </script>
