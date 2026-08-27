@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tablero de Rifa</title>
+<title>Gran Rifa Dieciochera</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap">
@@ -22,6 +22,8 @@
     --stub-soft: #F1D9D2;
     --focus: #2E6E57;
     --ok: #2E6E57;
+    --flag-red: #D52B1E;
+    --flag-blue: #0039A6;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -410,6 +412,112 @@
     margin: -0.2rem 0 0.9rem !important;
   }
 
+  .flag-ribbon {
+    height: 8px;
+    margin: -2.75rem -1.75rem 1.6rem;
+    background: repeating-linear-gradient(
+      90deg,
+      #D52B1E 0, #D52B1E 24px,
+      #FFFFFF 24px, #FFFFFF 48px,
+      #0039A6 48px, #0039A6 72px
+    );
+  }
+
+  .fiestas-flags {
+    font-family: "Fraunces", ui-serif, serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    letter-spacing: 0.06em;
+    color: #FFFFFF;
+    margin: 0 0 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .prize-panel {
+    background: var(--panel);
+    color: var(--ink);
+    border-radius: 14px;
+    padding: 1.1rem 1.2rem 1.2rem;
+    margin: 1.6rem 0 1.7rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+  }
+
+  .prize-panel h2 {
+    font-family: "Space Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 0 0 0.7rem;
+  }
+
+  .prizes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.55rem 0.9rem;
+  }
+
+  .prizes li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.15rem 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    border-left: 4px solid var(--flag-red);
+    padding-left: 0.65rem;
+  }
+
+  .prizes li:nth-child(2) { border-left-color: var(--flag-blue); }
+  .prizes li:nth-child(3) { border-left-color: var(--flag-red); }
+  .prizes li:nth-child(4) { border-left-color: var(--flag-blue); }
+
+  .prizes .prize-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    flex: none;
+  }
+
+  .draw-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: "Space Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--felt);
+    background: var(--brass-bright);
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    margin: 0;
+  }
+
+  .bunting {
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+    margin: 2.5rem 0 0.5rem;
+    padding-top: 1.5rem;
+  }
+
+  .bunting .pennant {
+    width: 0;
+    height: 0;
+    border-left: 13px solid transparent;
+    border-right: 13px solid transparent;
+    border-top: 20px solid #D52B1E;
+  }
+
+  .bunting .pennant:nth-child(3n+2) { border-top-color: #FFFFFF; filter: drop-shadow(0 1px 0 var(--line)); }
+  .bunting .pennant:nth-child(3n) { border-top-color: #0039A6; }
+
   .setup-note {
     max-width: 640px;
     margin: 3rem auto;
@@ -438,9 +546,21 @@
 
 <div class="page">
   <header class="hero">
+    <div class="flag-ribbon" aria-hidden="true"></div>
+    <p class="fiestas-flags">🇨🇱 ¡Tikitikití! 🇨🇱</p>
     <p class="eyebrow"><span class="live-dot" id="liveDot"></span>Tablero digital &middot; 1 &ndash; 100 &middot; en vivo</p>
-    <h1 id="title" contenteditable="true" spellcheck="false">Rifa de Beneficio</h1>
+    <h1 id="title" contenteditable="true" spellcheck="false">¡Gran Rifa Dieciochera!</h1>
     <p class="subtitle" id="subtitle" contenteditable="true" spellcheck="false">Elige tu número de la suerte y participa. Toca un número disponible para marcarlo como vendido.</p>
+    <div class="prize-panel">
+      <h2>🎁 Premios</h2>
+      <ul class="prizes">
+        <li><span class="prize-icon" aria-hidden="true">🥩</span>4 kg de lomo</li>
+        <li><span class="prize-icon" aria-hidden="true">🌭</span>1 kg de longanizas pincheras</li>
+        <li><span class="prize-icon" aria-hidden="true">🍖</span>1 kg de plateada a la chilena</li>
+        <li><span class="prize-icon" aria-hidden="true">🍷</span>1 botella de vino Diablo Rojo</li>
+      </ul>
+    </div>
+    <p class="draw-date">📅 SORTEAMOS EL 17/09</p>
     <div class="stat-row">
       <div class="stat"><b id="statSold">0</b><span>Vendidos</span></div>
       <div class="stat"><b id="statFree">100</b><span>Disponibles</span></div>
@@ -466,6 +586,12 @@
     <span id="adminStatus">Solo el organizador puede liberar números vendidos.</span>
     <button class="link-btn" id="adminLoginBtn" type="button">Iniciar sesión como organizador</button>
     <button class="link-btn" id="adminLogoutBtn" type="button" hidden>Cerrar sesión</button>
+  </div>
+
+  <div class="bunting" aria-hidden="true">
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
+    <span class="pennant"></span><span class="pennant"></span><span class="pennant"></span>
   </div>
 </div>
 
