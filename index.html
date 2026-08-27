@@ -169,16 +169,10 @@
     color: #D9D2BE;
   }
 
-  .price-row input {
-    width: 6.5rem;
-    background: rgba(0,0,0,0.25);
-    border: 1px solid rgba(232,196,118,0.3);
-    border-radius: 6px;
+  .price-row b {
     color: var(--brass-bright);
-    font-family: inherit;
     font-size: 1rem;
     font-variant-numeric: tabular-nums;
-    padding: 0.25rem 0.5rem;
   }
 
   .board-label {
@@ -564,10 +558,10 @@
     <div class="stat-row">
       <div class="stat"><b id="statSold">0</b><span>Vendidos</span></div>
       <div class="stat"><b id="statFree">100</b><span>Disponibles</span></div>
-      <div class="stat"><b id="statTotal">$0</b><span>Recaudado</span></div>
+      <div class="stat" id="statTotalWrap" hidden><b id="statTotal">$0</b><span>Recaudado</span></div>
       <div class="price-row">
-        <span>Valor c/u $</span>
-        <input id="priceInput" type="number" min="0" step="1" inputmode="numeric" value="1000">
+        <span>Valor c/u</span>
+        <b>$5.000</b>
       </div>
     </div>
   </header>
@@ -676,14 +670,14 @@
 
     const titleEl = document.getElementById("title");
     const subtitleEl = document.getElementById("subtitle");
-    const priceInput = document.getElementById("priceInput");
     const statSold = document.getElementById("statSold");
     const statFree = document.getElementById("statFree");
+    const statTotalWrap = document.getElementById("statTotalWrap");
     const statTotal = document.getElementById("statTotal");
     const toast = document.getElementById("toast");
 
+    const PRICE = 5000;
     let numbers = {};
-    let price = 1000;
     let toastTimer;
 
     function showToast(msg) {
@@ -701,7 +695,7 @@
       const soldCount = Object.keys(numbers).filter(function (k) { return numbers[k] && numbers[k].sold; }).length;
       statSold.textContent = soldCount;
       statFree.textContent = 100 - soldCount;
-      statTotal.textContent = fmtMoney(soldCount * price);
+      statTotal.textContent = fmtMoney(soldCount * PRICE);
 
       gridEl.innerHTML = "";
       for (let n = 1; n <= 100; n++) {
@@ -733,10 +727,6 @@
       const meta = snap.val() || {};
       if (typeof meta.title === "string") titleEl.textContent = meta.title;
       if (typeof meta.subtitle === "string") subtitleEl.textContent = meta.subtitle;
-      if (typeof meta.price === "number") {
-        price = meta.price;
-        priceInput.value = price;
-      }
       renderGrid();
     });
 
@@ -805,7 +795,7 @@
       releaseDialog.close();
     });
 
-    let titleTimer, subtitleTimer, priceTimer;
+    let titleTimer, subtitleTimer;
     titleEl.addEventListener("input", function () {
       clearTimeout(titleTimer);
       titleTimer = setTimeout(function () {
@@ -818,18 +808,12 @@
         set(ref(db, "meta/subtitle"), subtitleEl.textContent);
       }, 700);
     });
-    priceInput.addEventListener("input", function () {
-      const v = parseInt(priceInput.value, 10);
-      clearTimeout(priceTimer);
-      priceTimer = setTimeout(function () {
-        set(ref(db, "meta/price"), isNaN(v) ? 0 : v);
-      }, 700);
-    });
 
     onAuthStateChanged(auth, function (user) {
       isAdmin = !!user;
       adminLoginBtn.hidden = isAdmin;
       adminLogoutBtn.hidden = !isAdmin;
+      statTotalWrap.hidden = !isAdmin;
       adminStatus.textContent = isAdmin
         ? "Sesión de organizador activa — puedes liberar números."
         : "Solo el organizador puede liberar números vendidos.";
